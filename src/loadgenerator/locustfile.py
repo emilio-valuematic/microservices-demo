@@ -15,10 +15,52 @@
 # limitations under the License.
 
 import random
-from locust import FastHttpUser, TaskSet, between
+import os, math
+from typing import Optional, Tuple
+from locust import FastHttpUser, TaskSet, between, LoadTestShape
 from faker import Faker
 import datetime
 fake = Faker()
+
+class CyclicRampShape(LoadTestShape):
+    """
+    Rampa ciclica triangolare (up/down lineare) la cui pendenza (e quindi periodo)
+    è definita da SHAPE_RAMP_SPAWN_RATE.
+    """
+    def __init__(self):
+        super().__init__()
+        self.min_users = int(os.getenv("SHAPE_RAMP_MIN_USERS", "10"))
+        self.max_users = int(os.getenv("SHAPE_RAMP_MAX_USERS", "100"))
+        self.spawn_rate = float(os.getenv("SHAPE_RAMP_SPAWN_RATE", "5"))
+        self.duration_sec = float(os.getenv("SHAPE_RAMP_DURATION_SEC", "0"))
+
+        if self.spawn_rate <= 0:
+            raise ValueError("SHAPE_RAMP_SPAWN_RATE must be positive")
+        
+        user_delta = self.max_users - self.min_users
+        if user_delta < 0:
+            raise ValueError("SHAPE_RAMP_MAX_USERS must be >= SHAPE_RAMP_MIN_USERS")
+        
+        # Il periodo è calcolato in base allo spawn rate. Se il numero di utenti
+        # è costante, il periodo non è rilevante.
+        self.period_sec = (2 * user_delta / self.spawn_rate) if user_delta > 0 else 0
+
+    def tick(self) -> Optional[Tuple[int, float]]:
+        rt = self.get_run_time()
+        if self.duration_sec > 0 and rt > self.duration_sec:
+            return None
+
+        if self.period_sec == 0:
+             return self.min_users, self.spawn_rate
+        
+        # Calcola il target di utenti usando la forma d'onda triangolare,
+        # dove il periodo è derivato dallo spawn rate.
+        p = (rt % self.period_sec) / self.period_sec
+        tri = 2 * abs(2 * p - 1)
+        amp = max(0, self.max_users - self.min_users)
+        users = self.min_users + amp * (1.0 - tri)
+        
+        return int(round(users)), self.spawn_rate
 
 products = [
     '0PUK6V6EV0',

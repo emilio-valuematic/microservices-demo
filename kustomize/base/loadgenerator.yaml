@@ -77,14 +77,24 @@ spec:
               - ALL
           privileged: false
           readOnlyRootFilesystem: true
-        image: us-central1-docker.pkg.dev/google-samples/microservices-demo/loadgenerator:v0.10.3
+        image: docker.io/emiliovaluematic/loadgenerator:cyclicramp-amd64-0.2
+        imagePullPolicy: Always
+        #image: us-central1-docker.pkg.dev/google-samples/microservices-demo/loadgenerator:v0.10.3
         env:
         - name: FRONTEND_ADDR
           value: "frontend:80"
         - name: USERS
-          value: "10"
+          value: "30"
         - name: RATE
           value: "1"
+        - name: SHAPE_RAMP_MIN_USERS
+          value: "1"
+        - name: SHAPE_RAMP_MAX_USERS
+          value: "65"
+        - name: SHAPE_RAMP_SPAWN_RATE
+          value: "0.0541666"
+        - name: SHAPE_RAMP_DURATION_SEC
+          value: "0"
         resources:
           requests:
             cpu: 300m
