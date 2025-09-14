@@ -36,6 +36,28 @@ Find **Protocol Buffers Descriptions** at the [`./protos` directory](/protos).
 | [adservice](/src/adservice)                         | Java          | Provides text ads based on given context words.                                                                                   |
 | [loadgenerator](/src/loadgenerator)                 | Python/Locust | Continuously sends requests imitating realistic user shopping flows to the frontend.                                              |
 
+## Load generator (Locust)
+
+The `loadgenerator` service uses Locust to simulate realistic shopping journeys against the `frontend`.
+It includes a cyclic ramp (triangular) LoadTestShape with optional plateaus at the peaks.
+
+- Behavior
+  - Users linearly ramp up from `SHAPE_RAMP_MIN_USERS` to `SHAPE_RAMP_MAX_USERS`, optionally hold at the top, ramp down, then optionally hold at the bottom, and repeat.
+  - Total cycle duration: `(max - min) / spawn_rate + hold_max + (max - min) / spawn_rate + hold_min`.
+  - Values are clamped so users never go below `min` or above `max`.
+
+- Configuration (environment variables)
+  - `SHAPE_RAMP_MIN_USERS` (default: `10`): lower bound of concurrent users.
+  - `SHAPE_RAMP_MAX_USERS` (default: `100`): upper bound of concurrent users.
+  - `SHAPE_RAMP_SPAWN_RATE` (default: `5`): slope in users/second for both ramp-up and ramp-down.
+  - `SHAPE_RAMP_DURATION_SEC` (default: `0`): total test duration in seconds; `0` means run indefinitely.
+  - `SHAPE_RAMP_HOLD_MAX_SEC` (default: `0`): plateau duration at the peak user count.
+  - `SHAPE_RAMP_HOLD_MIN_SEC` (default: `0`): plateau duration at the minimum user count.
+
+Notes
+- When a `LoadTestShape` is defined, Locust ignores `-u/--users` and `-r/--spawn-rate` CLI flags; use the env vars above instead.
+- Kubernetes defaults for these variables (and the container image) are set in `kustomize/base/loadgenerator.yaml`.
+
 ## Screenshots
 
 | Home Page                                                                                                         | Checkout Screen                                                                                                    |

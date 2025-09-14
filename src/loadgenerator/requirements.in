@@ -1,3 +1,4 @@
 locust==2.33.2
 faker==35.2.2
 locust-plugins
+pyzmq==25.1.2
