@@ -44,9 +44,22 @@ spec:
                 - ALL
             privileged: false
             readOnlyRootFilesystem: true
-          image: us-central1-docker.pkg.dev/google-samples/microservices-demo/frontend:v0.10.3
+          image: emiliovaluematic/frontend-slow-startup:v0.10.3
           ports:
           - containerPort: 8080
+          startupProbe:
+            exec:
+              command:
+              - sh
+              - -c
+              - |
+                START_FILE="/tmp/pod_start_time"
+                if [ ! -f "$START_FILE" ]; then date +%s > "$START_FILE"; fi
+                ELAPSED=$(($(date +%s) - $(cat $START_FILE)))
+                [ $ELAPSED -gt 600 ] && exit 0 || exit 1
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            failureThreshold: 100
           readinessProbe:
             initialDelaySeconds: 10
             httpGet:
@@ -99,11 +112,17 @@ spec:
           #   value: "" # This value would look like "http://123.123.123"
           resources:
             requests:
-              cpu: 100m
-              memory: 64Mi
-            limits:
-              cpu: 200m
+              cpu: 300m
               memory: 128Mi
+            limits:
+              cpu: 600m
+              memory: 256Mi
+          volumeMounts:
+          - name: tmp
+            mountPath: /tmp
+      volumes:
+      - name: tmp
+        emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
