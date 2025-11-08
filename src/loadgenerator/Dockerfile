@@ -37,8 +37,11 @@ COPY --from=builder /install /usr/local
 
 # Add application code.
 COPY locustfile.py .
+COPY *_shape.py .
 
 # enable gevent support in debugger
 ENV GEVENT_SUPPORT=True
 
-ENTRYPOINT locust --host="http://${FRONTEND_ADDR}" --headless -u "${USERS:-10}" -r "${RATE:-1}" 2>&1
+# Default shape is 'cyclic' if not set
+# The entrypoint constructs the command to use the main locustfile and the selected shape file
+ENTRYPOINT ["/bin/sh", "-c", "locust --host=\"http://${FRONTEND_ADDR}\" --headless -u \"${USERS:-10}\" -r \"${RATE:-1}\" -f locustfile.py,${LOAD_SHAPE_TYPE:-cyclic}_shape.py 2>&1"]

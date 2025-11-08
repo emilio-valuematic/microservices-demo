@@ -1,0 +1,47 @@
+/* Base styles matching SYDA UI */
+:root {
+  --primary-dark: #0a192f;
+  --secondary-dark: #112240;
+  --darker-navy: #020c1b;
+  --accent-blue: #64ffda;
+  --accent-purple: #8b5cf6;
+  --text-primary: #e6f1ff;
+  --text-secondary: #8892b0;
+  --glow-blue: rgba(100, 255, 218, 0.1);
+  --glow-purple: rgba(139, 92, 246, 0.1);
+  /* Chart colors */
+  --chart-primary: #64ffda;
+  --chart-secondary: #8b5cf6;
+  /* State colors */
+  --state-active: #8b5cf6;
+  --state-inactive: #5a6378;
+  --state-error: #ef4444;
+  --state-success: #10b981;
+  --state-warning: #f59e0b;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--primary-dark);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+code, .monospace {
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Courier New', monospace;
+}
+
+#root {
+  min-height: 100vh;
+}

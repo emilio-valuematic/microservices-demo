@@ -1,0 +1,121 @@
+# Load Generator Controller - Kubernetes Manifests
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: loadgen-controller
+  labels:
+    app: loadgen-controller
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: loadgen-controller
+  labels:
+    app: loadgen-controller
+rules:
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "list", "patch", "update"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: loadgen-controller
+  labels:
+    app: loadgen-controller
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: loadgen-controller
+subjects:
+- kind: ServiceAccount
+  name: loadgen-controller
+  namespace: default
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loadgen-controller
+  labels:
+    app: loadgen-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loadgen-controller
+  template:
+    metadata:
+      labels:
+        app: loadgen-controller
+    spec:
+      serviceAccountName: loadgen-controller
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+      - name: controller
+        image: docker.io/emiliovaluematic/loadgen-controller:v1.0
+        imagePullPolicy: Always
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          privileged: false
+          readOnlyRootFilesystem: false
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        env:
+        - name: DEPLOYMENT_NAME
+          value: "loadgenerator"
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: CONTAINER_NAME
+          value: "main"
+        - name: PORT
+          value: "8080"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: loadgen-controller
+  labels:
+    app: loadgen-controller
+spec:
+  type: ClusterIP
+  selector:
+    app: loadgen-controller
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    name: http

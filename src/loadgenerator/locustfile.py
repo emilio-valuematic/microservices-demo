@@ -15,68 +15,11 @@
 # limitations under the License.
 
 import random
-import os, math
-from typing import Optional, Tuple
-from locust import FastHttpUser, TaskSet, between, LoadTestShape
-from faker import Faker
 import datetime
+from locust import FastHttpUser, TaskSet, between
+from faker import Faker
+
 fake = Faker()
-
-class CyclicRampShape(LoadTestShape):
-    """
-    Rampa ciclica triangolare (up/down lineare) la cui pendenza (e quindi periodo)
-    è definita da SHAPE_RAMP_SPAWN_RATE.
-    """
-    def __init__(self):
-        super().__init__()
-        self.min_users = int(os.getenv("SHAPE_RAMP_MIN_USERS", "10"))
-        self.max_users = int(os.getenv("SHAPE_RAMP_MAX_USERS", "100"))
-        self.spawn_rate = float(os.getenv("SHAPE_RAMP_SPAWN_RATE", "5"))
-        self.duration_sec = float(os.getenv("SHAPE_RAMP_DURATION_SEC", "0"))
-        # Plateau ai picchi (in secondi)
-        self.hold_max_sec = float(os.getenv("SHAPE_RAMP_HOLD_MAX_SEC", "0"))
-        self.hold_min_sec = float(os.getenv("SHAPE_RAMP_HOLD_MIN_SEC", "0"))
-
-        if self.spawn_rate <= 0:
-            raise ValueError("SHAPE_RAMP_SPAWN_RATE must be positive")
-        
-        # Ensure non-negative minimum users
-        if self.min_users < 0:
-            self.min_users = 0
-        
-        user_delta = self.max_users - self.min_users
-        if user_delta < 0:
-            raise ValueError("SHAPE_RAMP_MAX_USERS must be >= SHAPE_RAMP_MIN_USERS")
-        
-        # Tempi di salita/discesa e durata del ciclo con hold ai capi
-        self.t_up_sec = (user_delta / self.spawn_rate) if user_delta > 0 else 0
-        self.t_down_sec = self.t_up_sec
-        self.cycle_sec = self.t_up_sec + self.hold_max_sec + self.t_down_sec + self.hold_min_sec
-
-    def tick(self) -> Optional[Tuple[int, float]]:
-        rt = self.get_run_time()
-        if self.duration_sec > 0 and rt > self.duration_sec:
-            return None
-
-        # Se il ciclo è nullo (nessuna rampa e nessun hold), mantieni min_users
-        if self.cycle_sec == 0:
-             return self.min_users, self.spawn_rate
-
-        # Forma d'onda a tratti: salita → hold max → discesa → hold min
-        t = rt % self.cycle_sec
-        if t < self.t_up_sec:
-            users = self.min_users + self.spawn_rate * t
-        elif t < self.t_up_sec + self.hold_max_sec:
-            users = self.max_users
-        elif t < self.t_up_sec + self.hold_max_sec + self.t_down_sec:
-            users = self.max_users - self.spawn_rate * (t - self.t_up_sec - self.hold_max_sec)
-        else:
-            users = self.min_users
-
-        # Clamp finale per sicurezza
-        users = max(self.min_users, min(self.max_users, users))
-
-        return int(round(users)), self.spawn_rate
 
 products = [
     '0PUK6V6EV0',

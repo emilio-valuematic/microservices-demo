@@ -77,7 +77,7 @@ spec:
               - ALL
           privileged: false
           readOnlyRootFilesystem: true
-        image: docker.io/emiliovaluematic/loadgenerator:cyclicramp-amd64-0.5
+        image: docker.io/emiliovaluematic/loadgenerator:multishape-v1.5
         imagePullPolicy: Always
         #image: us-central1-docker.pkg.dev/google-samples/microservices-demo/loadgenerator:v0.10.3
         env:
@@ -87,10 +87,16 @@ spec:
           value: "30"
         - name: RATE
           value: "1"
+        # Load shape selection
+        - name: LOAD_SHAPE_TYPE
+          value: "cyclic"
+        - name: NOISE_PERCENT
+          value: "0"
+        # Cyclic shape parameters
         - name: SHAPE_RAMP_MIN_USERS
           value: "1"
         - name: SHAPE_RAMP_MAX_USERS
-          value: "65"
+          value: "90"
         - name: SHAPE_RAMP_SPAWN_RATE
           value: "0.0541666"
         - name: SHAPE_RAMP_DURATION_SEC
@@ -98,7 +104,7 @@ spec:
         - name: SHAPE_RAMP_HOLD_MAX_SEC
           value: "300"
         - name: SHAPE_RAMP_HOLD_MIN_SEC
-          value: "600"
+          value: "450"
         resources:
           requests:
             cpu: 300m

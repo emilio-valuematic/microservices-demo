@@ -22,6 +22,8 @@ resources:
 - emailservice.yaml
 - frontend.yaml
 - loadgenerator.yaml
+- loadgen-controller.yaml
+- loadgen-dashboard.yaml
 - paymentservice.yaml
 - productcatalogservice.yaml
 - recommendationservice.yaml

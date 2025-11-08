@@ -1,21 +1,59 @@
-## Load Generator: Cyclic Ramp (Triangular) Load Shape
+## Load Generator: Multi-Shape Load Testing with Noise
 
-This directory contains the Locust-based load generator for the microservices demo. In addition to the existing user flows, it now supports a cyclic ramp (triangular) LoadTestShape that continuously ramps users up and down between configurable bounds.
+This directory contains the Locust-based load generator for the microservices demo. It supports **5 different load shape patterns** with configurable noise for realistic traffic simulation.
 
-### What is the Cyclic Ramp Shape?
-- **Idea**: Model load as a repeating triangle wave (linear ramp up, then linear ramp down).
-- **Effect**: Users oscillate between a minimum and a maximum with a fixed period.
-- **Implementation**: A `LoadTestShape` named `CyclicRampShape` in `locustfile.py`.
-- **Note**: When a `LoadTestShape` is present, Locust ignores `-u` and `-r` CLI flags.
+### Available Load Shapes
 
-Shape definition (for time `t` in seconds):
-```
-users(t) = min_users + (max_users - min_users) * (1 - tri(p))
-where p = (t % period_sec) / period_sec and tri(p) = 2 * |2p - 1|
+Select a shape using the `LOAD_SHAPE_TYPE` environment variable:
+
+#### 1. **Cyclic Ramp** (default: `cyclic`)
+Triangular wave with linear ramp up/down and configurable plateaus at peaks/valleys.
+
+**Use case**: Periodic traffic, oscillating load patterns
+
+#### 2. **Stages** (`stages`)
+K6-style multi-phase testing with pre-defined stages (duration, users, spawn_rate).
+
+**Use case**: Complex scenarios with multiple phases, realistic business cycles
+
+#### 3. **Spike** (`spike`)
+Sudden dramatic traffic surge from baseline to peak, then recovery to baseline.
+
+**Use case**: Resilience testing, Black Friday simulation, autoscaler validation
+
+#### 4. **Sinusoidal Wave** (`sinusoidal`)
+Smooth sine wave oscillation for natural traffic variations.
+
+**Use case**: Day/night patterns, weekday/weekend cycles
+
+#### 5. **Step Load** (`step`)
+Incremental user increases at regular intervals.
+
+**Use case**: Capacity planning, threshold identification
+
+### Noise Feature
+
+All shapes support **configurable noise** (0-100%) via `NOISE_PERCENT` to add gaussian randomness to user counts, simulating realistic traffic unpredictability.
+
+## Quick Start
+
+### Select a Load Shape
+
+```bash
+# Set shape type
+export LOAD_SHAPE_TYPE=spike  # Options: cyclic, stages, spike, sinusoidal, step
+
+# Add noise for realism
+export NOISE_PERCENT=10  # 0-100%
 ```
 
 ### Configuration via environment variables
-Set these to control the wave. Defaults are shown in parentheses.
+
+**Common to all shapes:**
+- **LOAD_SHAPE_TYPE** ("cyclic"): Shape pattern to use
+- **NOISE_PERCENT** ("0"): Gaussian noise level 0-100%
+
+**Cyclic Ramp parameters:**
 - **SHAPE_RAMP_MIN_USERS** ("10"): minimum number of users
 - **SHAPE_RAMP_MAX_USERS** ("100"): maximum number of users
 - **SHAPE_RAMP_SPAWN_RATE** ("5"): users spawned per second. This parameter **defines the ramp's slope** and dynamically calculates the wave's period.
